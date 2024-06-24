@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Treino</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Detalhes do Treino</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted" id="nomeTreino"></h6>
+                <p class="card-text">Última Execução: <span id="dataUltimaExecucao"></span></p>
+                <h5>Exercícios:</h5>
+                <ul id="exerciciosList">
+                    <!-- Aqui serão inseridos os exercícios -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let config;
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('config.json');
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar config.json');
+                }
+                config = await response.json();
+                loadTreinoDetails(); // Após carregar a configuração, chama a função para carregar os detalhes do treino
+            } catch (error) {
+                console.error(error);
+                alert('Erro ao carregar configuração');
+            }
+        }
+
+        async function loadTreinoDetails() {
+            try {
+                // Extrair os parâmetros da URL
+                const params = new URLSearchParams(window.location.search);
+                const nomeTreino = params.get('nomeTreino');
+                const dataUltimaExecucao = params.get('dataUltimaExecucao');
+                const codigoTreino = params.get('codigoTreino');
+                const cpfAluno = params.get('cpfAluno');
+
+                // Preencher os dados na página
+                document.getElementById('nomeTreino').textContent = nomeTreino;
+                document.getElementById('dataUltimaExecucao').textContent = dataUltimaExecucao;
+
+                // Buscar os exercícios do treino
+                const response = await fetch(`http://${config.serverIp}:${config.serverPort}/exercicios/exercicios_treino/${codigoTreino}`);
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar exercícios do treino');
+                }
+                const exercicios = await response.json();
+                const exerciciosList = document.getElementById('exerciciosList');
+                exercicios.forEach(exercicio => {
+                    exerciciosList.innerHTML += `<li>${exercicio.exercicio.toUpperCase()} - ${exercicio.series.toUpperCase()} séries de ${exercicio.repeticoes.toUpperCase()}</li>`;
+                });
+            } catch (error) {
+                console.error('Erro ao carregar detalhes do treino:', error);
+                alert('Erro ao carregar detalhes do treino');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadConfig);
+    </script>
+</body>
+
+</html>

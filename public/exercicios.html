@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Exercícios</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Exercícios</h1>
+        <div id="exercicios-list" class="card-container"></div>
+    </div>
+
+    <script>
+        async function fetchExercicios() {
+            try {
+                const response = await fetch('/exercicios');
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar exercícios');
+                }
+                const exercicios = await response.json();
+                renderExercicios(exercicios);
+            } catch (error) {
+                console.error(error);
+                alert('Erro ao buscar exercícios');
+            }
+        }
+
+        function renderExercicios(exercicios) {
+            const exerciciosList = document.getElementById('exercicios-list');
+            exercicios.forEach(exercicio => {
+                const exercicioCard = document.createElement('div');
+                exercicioCard.classList.add('card');
+                exercicioCard.style.backgroundColor = '#808080'; // Cinza
+                exercicioCard.innerHTML = `
+                    <h2>${exercicio.exercicio}</h2>
+                    <p>Séries: ${exercicio.series}, Repetições: ${exercicio.repeticoes}</p>
+                `;
+                exerciciosList.appendChild(exercicioCard);
+            });
+        }
+
+        fetchExercicios();
+    </script>
+</body>
+</html>

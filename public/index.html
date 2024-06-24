@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aluno - Treinos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="#">Aluno - Treinos</a>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Dados do Aluno</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="inputCpf">CPF do Aluno</label>
+                    <input type="text" class="form-control" id="inputCpf" placeholder="Digite o CPF do aluno">
+                    <small id="cpfHelp" class="form-text text-muted">Digite o CPF do aluno para buscar.</small>
+                </div>
+                <button type="button" class="btn btn-primary mb-3" onclick="buscarAlunoPorCpf()">Buscar Aluno</button>
+                <h6 class="card-subtitle mb-2 text-muted">Nome do Aluno: <span id="nomeAluno"></span></h6>
+                <p class="card-text">CPF do Aluno: <span id="cpfAluno"></span></p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title">Treinos Disponíveis</h5>
+            </div>
+            <div class="card-body" id="treinos-list">
+                <!-- Aqui serão listados os treinos do aluno -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para exibir detalhes do treino e exercícios -->
+    <div class="modal fade" id="detalhesTreinoModal" tabindex="-1" role="dialog"
+        aria-labelledby="detalhesTreinoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detalhesTreinoModalLabel">Detalhes do Treino</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="detalhesTreinoBody">
+                    <!-- Aqui serão inseridos os detalhes do treino e exercícios -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script>
+        let config;
+
+        async function loadConfig() {
+            const response = await fetch('config.json');
+            config = await response.json();
+        }
+
+        async function buscarAlunoPorCpf() {
+            let cpf = document.getElementById('inputCpf').value.trim();
+            // Remover caracteres especiais do CPF (deixar apenas dígitos)
+            cpf = cpf.replace(/\D/g, ''); // Remove todos os não dígitos (\D)
+
+            if (!cpf) {
+                alert('Por favor, digite um CPF válido.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://${config.serverIp}:${config.serverPort}/alunos/cpf/${cpf}`);
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar aluno por CPF');
+                }
+                const aluno = await response.json();
+                if (aluno) {
+                    document.getElementById('nomeAluno').textContent = aluno.nome_aluno;
+                    document.getElementById('cpfAluno').textContent = aluno.cpf_aluno;
+                    await fetchTreinos(aluno.cpf_aluno);
+                } else {
+                    alert('Aluno não encontrado.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Erro ao buscar aluno por CPF');
+            }
+        }
+
+
+        async function fetchTreinos(cpfAluno) {
+            try {
+                const response = await fetch(`http://${config.serverIp}:${config.serverPort}/treinos/exercicios/${cpfAluno}`);
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar treinos do aluno');
+                }
+                const treinos = await response.json();
+                renderTreinos(treinos, cpfAluno);
+            } catch (error) {
+                console.error(error);
+                alert('Erro ao buscar treinos do aluno');
+            }
+        }
+
+        function renderTreinos(treinos, cpfAluno) {
+            const treinosList = document.getElementById('treinos-list');
+            treinosList.innerHTML = ''; // Limpa o conteúdo anterior
+
+            const hoje = new Date(); // Data de hoje
+
+            treinos.forEach(treinoData => {
+                const treino = treinoData.treino;
+                const exercicios = treinoData.exercicios;
+
+                const treinoCard = document.createElement('div');
+                treinoCard.classList.add('card', 'mb-3');
+
+                const dataUltimaExecucao = treino.data_ultima_execucao ? new Date(treino.data_ultima_execucao) : null;
+                const dataUltimaExecucaoFormatada = dataUltimaExecucao ? dataUltimaExecucao.toLocaleString() : 'Nunca executado';
+                const executadoHoje = dataUltimaExecucao && dataUltimaExecucao.toDateString() === hoje.toDateString();
+
+                let labelExecutadoHoje = '';
+                if (executadoHoje) {
+                    labelExecutadoHoje = `<span class="badge badge-success">Executado hoje</span>`;
+                }
+
+                let exerciciosHTML = '';
+                exercicios.forEach(exercicio => {
+                    exerciciosHTML += `
+                <li>${exercicio.exercicio.toUpperCase()} - ${exercicio.series.toUpperCase()} séries de ${exercicio.repeticoes.toUpperCase()}</li>
+            `;
+                });
+
+                treinoCard.innerHTML = `
+            <div class="card-body">
+                <h5 class="card-title">Treino: ${treino.nome_treino}</h5>
+                <p class="card-text">Última Execução: ${dataUltimaExecucaoFormatada} ${labelExecutadoHoje}</p>
+                <h6>Exercícios:</h6>
+                <ul>${exerciciosHTML}</ul>
+                <button class="btn btn-sm btn-primary" onclick="executarTreino(${treino.codigo_treino}, '${treino.nome_treino}', '${dataUltimaExecucaoFormatada}', ${cpfAluno}, ${true}, ${executadoHoje})">Executar Treino</button>
+                <button class="btn btn-sm btn-secondary ml-2" onclick="executarTreino(${treino.codigo_treino}, '${treino.nome_treino}', '${dataUltimaExecucaoFormatada}', ${cpfAluno},${false},${executadoHoje})">Abrir Treino</button>
+            </div>
+        `;
+
+                treinosList.appendChild(treinoCard);
+            });
+        }
+
+
+        async function executarTreino(codigoTreino, nomeTreino, dataUltimaExecucao, cpfAluno, bModal, bexecutadohoje) {
+            try {
+                if (bexecutadohoje) {
+                    const confirmacao = confirm('Você deseja continuar?');
+                    if (!confirmacao) {
+                        return; // Se não deseja continuar, sai da função sem abrir modal ou nova janela
+                    }
+                }
+                const response = await fetch(`http://${config.serverIp}:${config.serverPort}/treinos/${codigoTreino}/executar`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data_ultima_execucao: new Date() })
+                });
+                if (!response.ok) {
+                    throw new Error('Erro ao executar treino');
+                }
+                if (bModal) {
+                    abrirModalDetalhesTreino(nomeTreino, dataUltimaExecucao, cpfAluno, codigoTreino);
+                }
+                else {
+                    const url = `detalhes_treino.html?codigoTreino=${codigoTreino}&nomeTreino=${encodeURIComponent(nomeTreino)}&dataUltimaExecucao=${encodeURIComponent(dataUltimaExecucao)}&cpfAluno=${cpfAluno}`;
+                    window.open(url, '_blank');
+                }
+
+                // Abre o modal com os detalhes do treino e exercícios
+                // Atualizar a lista de treinos após a execução
+                await fetchTreinos(cpfAluno);
+            } catch (error) {
+                console.error(error);
+                alert('Erro ao executar treino');
+            }
+        }
+
+        function abrirModalDetalhesTreino(nomeTreino, dataUltimaExecucao, cpfAluno, codigoTreino) {
+            const modalTitle = document.getElementById('detalhesTreinoModalLabel');
+            const modalBody = document.getElementById('detalhesTreinoBody');
+
+            modalTitle.textContent = `Detalhes do Treino: ${nomeTreino}`;
+            modalBody.innerHTML = `
+                <p>Última Execução: ${dataUltimaExecucao}</p>
+                <h5>Exercícios:</h5>
+                <ul>
+                    <!-- Aqui serão inseridos os exercícios -->
+                </ul>
+            `;
+            // Busca os exercícios do treino para preencher a lista no modal
+            fetch(`http://${config.serverIp}:${config.serverPort}/exercicios/exercicios_treino/${codigoTreino}`)
+                .then(response => response.json())
+                .then(exercicios => {
+                    const exerciciosList = modalBody.querySelector('ul');
+                    console.log(exercicios);
+                    exercicios.forEach(exercicio => {
+                        exerciciosList.innerHTML += `<li>${exercicio.exercicio.toUpperCase()} - ${exercicio.series.toUpperCase()} séries de ${exercicio.repeticoes.toUpperCase()}</li>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar exercícios do treino:', error);
+                });
+
+            // Abre o modal
+            $('#detalhesTreinoModal').modal('show');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            $('#inputCpf').mask('000.000.000-00', { reverse: true });
+        });
+    </script>
+
+</body>
+
+</html>
