@@ -18,7 +18,7 @@
         <div class="form-group">
             <label for="inputCpf">CPF do Aluno</label>
             <input type="text" class="form-control" id="inputCpf" placeholder="Digite o CPF do aluno">
-        </div>
+        </div>        
         <button type="button" class="btn btn-primary" onclick="buscarAlunos()">Buscar Alunos</button>
 
         <table class="table mt-3">
@@ -27,6 +27,7 @@
                     <th scope="col">#</th>
                     <th scope="col">CPF</th>
                     <th scope="col">Nome</th>
+                    <th scope="col">Ativo</th>
                     <th scope="col">Ações</th>
                 </tr>
             </thead>
@@ -50,12 +51,14 @@
             <div class="modal-body">
                 <form id="editarAlunoForm">
                     <div class="form-group">
-                        <label for="inputNomeEdit">Nome</label>
-                        <input type="text" class="form-control" id="inputNomeEdit" placeholder="Digite o nome do aluno">
+                        <label for="inputNomeEdit">Nome *</label>
+                        <input type="text" class="form-control" id="inputNomeEdit" placeholder="Digite o nome do aluno" required>
+                        <!-- Adicionado o atributo 'required' para tornar o campo obrigatório -->
                     </div>
                     <div class="form-group">
                         <label for="inputCpfEdit">CPF</label>
-                        <input type="text" class="form-control" id="inputCpfEdit" placeholder="Digite o CPF do aluno">
+                        <input type="text" class="form-control" id="inputCpfEdit" placeholder="Digite o CPF do aluno" disabled>
+                        <!-- Adicionado o atributo 'disabled' para bloquear o campo -->
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="checkAtivo">
@@ -66,6 +69,7 @@
                     <input type="hidden" id="codigoAluno">
                 </form>
             </div>
+            
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="salvarEdicaoAluno()">Salvar</button>

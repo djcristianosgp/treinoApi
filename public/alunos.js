@@ -58,11 +58,13 @@ function buscarAlunos() {
 
             // Preencher a lista com os novos alunos retornados
             alunos.forEach(aluno => {
+                const statusAtivo = aluno.ativo ? 'Sim' : 'Não';
                 const row = `
                     <tr>
                         <th scope="row">${aluno.codigo_aluno}</th>
                         <td>${aluno.cpf_aluno}</td>
                         <td>${aluno.nome_aluno}</td>
+                        <td>${statusAtivo}</td>
                         <td>
                             <button type="button" class="btn btn-primary" onclick="abrirModalEditarAluno(${aluno.codigo_aluno}, '${aluno.nome_aluno}', '${aluno.cpf_aluno}', ${aluno.ativo})">Editar</button>
                         </td>
