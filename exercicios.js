@@ -128,7 +128,7 @@ router.get('/exercicios/:codigo_exercicio', async (req, res) => {
     const { codigo_exercicio } = req.params;
     try {
         const result = await pool.query(
-            'SELECT * FROM exercicio WHERE id = $1',
+            'SELECT * FROM exercicio WHERE codigo_execicio = $1',
             [codigo_exercicio]
         );
         if (result.rows.length > 0) {
@@ -178,7 +178,7 @@ router.put('/exercicios/:codigo_exercicio', async (req, res) => {
     const { codigo_treino, exercicio, series, repeticoes } = req.body;
     try {
         const result = await pool.query(
-            'UPDATE exercicio SET treino = $1, exercicio = $2, series = $3, repeticoes = $4 WHERE id = $5 RETURNING *',
+            'UPDATE exercicio SET treino = $1, exercicio = $2, series = $3, repeticoes = $4 WHERE codigo_execicio = $5 RETURNING *',
             [codigo_treino, exercicio, series, repeticoes, codigo_exercicio]
         );
         if (result.rows.length > 0) {
@@ -263,7 +263,7 @@ router.delete('/exercicios/:codigo_exercicio', async (req, res) => {
     const { codigo_exercicio } = req.params;
     try {
         const result = await pool.query(
-            'DELETE FROM exercicio WHERE id = $1',
+            'DELETE FROM exercicio WHERE codigo_execicio = $1',
             [codigo_exercicio]
         );
         if (result.rowCount > 0) {
